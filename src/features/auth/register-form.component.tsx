@@ -29,7 +29,7 @@ export const RegisterForm = () => {
       const response = await register(data).unwrap();
       dispatch(setCredentials({
         user: {
-          id: (jwtDecode(response.token) as any).id,
+          customerId: (jwtDecode(response.token) as any).customerId,
           email: data.email
         },
         token: response.token

@@ -20,11 +20,12 @@ export const LoginForm = () => {
       const response = await login(data).unwrap();
       dispatch(setCredentials({
         user: {
-          id: (jwtDecode(response.token) as any).id,
+          customerId: (jwtDecode(response.token) as any).customerId,
           email: data.email
         },
         token: response.token
       }));
+      localStorage.setItem('token', response.token);
     } catch (error) {
       // TODO
       console.log(error);

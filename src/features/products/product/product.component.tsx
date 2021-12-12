@@ -12,13 +12,28 @@ import {
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useGetProductQuery } from "../../../app/services/products.service";
+import { useStoreDispatch } from "../../../app/store";
+import { addToCart } from "../../cart/cart.slice";
 
 interface ProductProps {
-  id: string;
+  match: {
+    params: {
+      id: string;
+    };
+  };
 }
 
-export const Product = ({ id }: ProductProps) => {
+export const Product = ({
+  match: {
+    params: { id },
+  },
+}: ProductProps) => {
+  const dispatch = useStoreDispatch();
   const { data: product, isLoading } = useGetProductQuery(id);
+
+  const handleAddToCart = () => {
+    product && dispatch(addToCart({ product: product, quantity: 1 }));
+  };
 
   if (isLoading) {
     return <div>Loading</div>;
@@ -32,27 +47,33 @@ export const Product = ({ id }: ProductProps) => {
     <Container>
       <Row>
         <Breadcrumb>
-          <Breadcrumb.Item as="span">
-            <Link to="/">Main</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item active>{product.category}</Breadcrumb.Item>
+          <Link className="breadcrumb-item" to="/">
+            Strona główna
+          </Link>
+          <Breadcrumb.Item active>{product.name}</Breadcrumb.Item>
         </Breadcrumb>
       </Row>
       <Row>
         <Col xs={12} xl={6}>
-          <Carousel>
+          <Image
+            src={
+              "https://media.merlin.pl/media/original/000/003/798/56ba60fda1bce.jpg"
+            }
+            fluid
+          />
+          {/* <Carousel>
             {product.images.map((image) => (
               <Carousel.Item key={image}>
                 <Image src={image} fluid />
               </Carousel.Item>
             ))}
-          </Carousel>
+          </Carousel> */}
         </Col>
         <Col xs={12} xl={6}>
           <Stack>
             <Stack className="mb-3">
               <h1>{product.name}</h1>
-              <p className="mb-1">{product.category}</p>
+              {/* <p className="mb-1">{product.category}</p> */}
               <div className="d-flex mb-3">
                 <i className="bi bi-star-fill"></i>
                 <i className="bi bi-star-fill"></i>
@@ -61,15 +82,17 @@ export const Product = ({ id }: ProductProps) => {
                 <i className="bi bi-star"></i>
               </div>
               <h2>$ {product.price}</h2>
-              <Button className="align-self-start">ADD TO CART</Button>
+              <Button className="align-self-start" onClick={handleAddToCart}>
+                Dodaj do koszyka
+              </Button>
             </Stack>
             <Accordion defaultActiveKey="0" flush>
               <Accordion.Item eventKey="0">
-                <Accordion.Header>Description</Accordion.Header>
+                <Accordion.Header>Opis</Accordion.Header>
                 <Accordion.Body>{product.description}</Accordion.Body>
               </Accordion.Item>
               <Accordion.Item eventKey="1">
-                <Accordion.Header>Specyfication</Accordion.Header>
+                <Accordion.Header>Specyfikacja</Accordion.Header>
                 <Accordion.Body>
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
                   do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -82,7 +105,7 @@ export const Product = ({ id }: ProductProps) => {
                 </Accordion.Body>
               </Accordion.Item>
               <Accordion.Item eventKey="2">
-                <Accordion.Header>Payment and Delivery</Accordion.Header>
+                <Accordion.Header>Płatność i dostawa</Accordion.Header>
                 <Accordion.Body>
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
                   do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -95,7 +118,7 @@ export const Product = ({ id }: ProductProps) => {
                 </Accordion.Body>
               </Accordion.Item>
               <Accordion.Item eventKey="3">
-                <Accordion.Header>Reviews</Accordion.Header>
+                <Accordion.Header>Recenzje</Accordion.Header>
                 <Accordion.Body>
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
                   do eiusmod tempor incididunt ut labore et dolore magna aliqua.

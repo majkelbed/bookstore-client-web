@@ -2,9 +2,16 @@ import React from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useListProductsQuery } from "../../../app/services/products.service";
+import { useStoreDispatch } from "../../../app/store";
+import { addToCart } from "../../cart/cart.slice";
 
 export const ProductsGrid = () => {
+  const dispatch = useStoreDispatch();
   const { data: products, isLoading } = useListProductsQuery();
+
+  const handleAddToCart = (product: any) => () => {
+    dispatch(addToCart({ product: product, quantity: 1 }));
+  }
 
   if (isLoading) {
     return <div>Loading</div>;
@@ -26,7 +33,7 @@ export const ProductsGrid = () => {
               >
                 <Card.Img
                   variant="top"
-                  src={product.images[0]}
+                  src={"https://media.merlin.pl/media/original/000/003/798/56ba60fda1bce.jpg"}
                   alt={product.name}
                 />
               </Link>
@@ -50,6 +57,7 @@ export const ProductsGrid = () => {
                   <Button
                     className="rounded rounded-pill p-0"
                     style={{ width: "48px", height: "48px" }}
+                    onClick={handleAddToCart(product)}
                   >
                     <i className="bi bi-cart fs-5"></i>
                   </Button>
