@@ -1,4 +1,3 @@
-import React from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useListProductsQuery } from "../../../app/services/products.service";
@@ -14,11 +13,11 @@ export const ProductsGrid = () => {
   }
 
   if (isLoading) {
-    return <div>Loading</div>;
+    return <Container>Loading</Container>;
   }
 
-  if (!products) {
-    return <div>Not found products</div>;
+  if (!products || !products.length) {
+    return <Container>Not found products</Container>;
   }
 
   return (

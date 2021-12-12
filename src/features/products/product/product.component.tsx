@@ -1,4 +1,4 @@
-import React from "react";
+import jwtDecode from "jwt-decode";
 import {
   Container,
   Row,
@@ -6,13 +6,20 @@ import {
   Image,
   Stack,
   Breadcrumb,
-  Carousel,
   Accordion,
   Button,
+  Form,
+  ListGroup,
+  Badge,
 } from "react-bootstrap";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { Link } from "react-router-dom";
-import { useGetProductQuery } from "../../../app/services/products.service";
+import {
+  useCreateReviewMutation,
+  useGetProductQuery,
+} from "../../../app/services/products.service";
 import { useStoreDispatch } from "../../../app/store";
+import { setCredentials } from "../../auth/auth.slice";
 import { addToCart } from "../../cart/cart.slice";
 
 interface ProductProps {
@@ -23,13 +30,31 @@ interface ProductProps {
   };
 }
 
-export const Product = ({
-  match: {
-    params: { id },
-  },
-}: ProductProps) => {
+interface FormState {
+  text: string;
+  stars: number;
+}
+
+export const Product = ({ match: { params } }: ProductProps) => {
+  const { id } = params;
   const dispatch = useStoreDispatch();
   const { data: product, isLoading } = useGetProductQuery(id);
+  const [createReview, { isLoading: isLoadingReview, isError, error }] =
+    useCreateReviewMutation();
+  const { register: registerInput, handleSubmit, reset } = useForm<FormState>();
+
+  const handleCreateReview: SubmitHandler<FormState> = async (
+    data,
+    helpers
+  ) => {
+    try {
+      await createReview({ ...data, productId: id }).unwrap();
+      reset();
+    } catch (error) {
+      // TODO
+      console.log(error);
+    }
+  };
 
   const handleAddToCart = () => {
     product && dispatch(addToCart({ product: product, quantity: 1 }));
@@ -61,25 +86,13 @@ export const Product = ({
             }
             fluid
           />
-          {/* <Carousel>
-            {product.images.map((image) => (
-              <Carousel.Item key={image}>
-                <Image src={image} fluid />
-              </Carousel.Item>
-            ))}
-          </Carousel> */}
         </Col>
         <Col xs={12} xl={6}>
           <Stack>
             <Stack className="mb-3">
               <h1>{product.name}</h1>
-              {/* <p className="mb-1">{product.category}</p> */}
               <div className="d-flex mb-3">
-                <i className="bi bi-star-fill"></i>
-                <i className="bi bi-star-fill"></i>
-                <i className="bi bi-star-half"></i>
-                <i className="bi bi-star"></i>
-                <i className="bi bi-star"></i>
+                {Array.from({ length: 5 }).map((_, index) => (Math.ceil(product.rating) > index + 1 ? <i className="bi bi-star-fill"></i> : <i className="bi bi-star"></i>))}
               </div>
               <h2>$ {product.price}</h2>
               <Button className="align-self-start" onClick={handleAddToCart}>
@@ -91,43 +104,64 @@ export const Product = ({
                 <Accordion.Header>Opis</Accordion.Header>
                 <Accordion.Body>{product.description}</Accordion.Body>
               </Accordion.Item>
-              <Accordion.Item eventKey="1">
-                <Accordion.Header>Specyfikacja</Accordion.Header>
-                <Accordion.Body>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi ut aliquip ex ea commodo consequat. Duis aute
-                  irure dolor in reprehenderit in voluptate velit esse cillum
-                  dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-                  cupidatat non proident, sunt in culpa qui officia deserunt
-                  mollit anim id est laborum.
-                </Accordion.Body>
-              </Accordion.Item>
               <Accordion.Item eventKey="2">
                 <Accordion.Header>Płatność i dostawa</Accordion.Header>
                 <Accordion.Body>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi ut aliquip ex ea commodo consequat. Duis aute
-                  irure dolor in reprehenderit in voluptate velit esse cillum
-                  dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-                  cupidatat non proident, sunt in culpa qui officia deserunt
-                  mollit anim id est laborum.
+                  <p>Płatność przelewem</p>
+                  <table className="w-100">
+                    <thead>
+                      <th>Metoda dostawy</th>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Paczkomat</td>
+                        <td>12 $</td>
+                      </tr>
+                      <tr>
+                        <td>Kurier</td>
+                        <td>15 $</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </Accordion.Body>
               </Accordion.Item>
               <Accordion.Item eventKey="3">
                 <Accordion.Header>Recenzje</Accordion.Header>
                 <Accordion.Body>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi ut aliquip ex ea commodo consequat. Duis aute
-                  irure dolor in reprehenderit in voluptate velit esse cillum
-                  dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-                  cupidatat non proident, sunt in culpa qui officia deserunt
-                  mollit anim id est laborum.
+                  <ListGroup>
+                    {product.reviews.map((review) => (
+                      <ListGroup.Item
+                        as="li"
+                        key={review.id}
+                        className="d-flex justify-content-between align-items-start"
+                      >
+                        <div className="ms-2 me-auto">
+                          <div className="fw-bold">{review.text}</div>
+                          {Array.from({ length: 5 }).map((_, index) => (review.stars >= index + 1 ? <i className="bi bi-star-fill"></i> : <i className="bi bi-star"></i>))}
+                        </div>
+                      </ListGroup.Item>
+                    ))}
+                  </ListGroup>
+
+                  <Form className="mt-5" onSubmit={handleSubmit(handleCreateReview)}>
+                    <Form.Group className="mb-3" controlId="reviewText">
+                      <Form.Label>Co myślisz o tym produkcie?</Form.Label>
+                      <Form.Control type="text" {...registerInput("text")} />
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="reviewStars">
+                      <Form.Label>Ile gwiazdek? XD</Form.Label>
+                      <Form.Control type="number" {...registerInput("stars")} />
+                    </Form.Group>
+
+                    <Button
+                      variant="primary"
+                      type="submit"
+                      disabled={isLoading || isLoadingReview}
+                    >
+                      Dodaj recenzję
+                    </Button>
+                  </Form>
+                  {isError ? JSON.stringify(error) : null}
                 </Accordion.Body>
               </Accordion.Item>
             </Accordion>

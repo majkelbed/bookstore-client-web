@@ -34,6 +34,7 @@ export const RegisterForm = () => {
         },
         token: response.token
       }));
+      localStorage.setItem('token', response.token);
     } catch (error) {
       // TODO
       console.log(error);
