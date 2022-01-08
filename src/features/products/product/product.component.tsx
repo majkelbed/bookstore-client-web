@@ -1,4 +1,4 @@
-import jwtDecode from "jwt-decode";
+import StarPicker from 'react-star-picker';
 import {
   Container,
   Row,
@@ -18,9 +18,10 @@ import {
   useCreateReviewMutation,
   useGetProductQuery,
 } from "../../../app/services/products.service";
-import { useStoreDispatch } from "../../../app/store";
+import { useStateSelector, useStoreDispatch } from "../../../app/store";
 import { setCredentials } from "../../auth/auth.slice";
 import { addToCart } from "../../cart/cart.slice";
+import { useState } from 'react';
 
 interface ProductProps {
   match: {
@@ -38,10 +39,13 @@ interface FormState {
 export const Product = ({ match: { params } }: ProductProps) => {
   const { id } = params;
   const dispatch = useStoreDispatch();
+  const user = useStateSelector((state) => state.auth.user);
   const { data: product, isLoading } = useGetProductQuery(id);
   const [createReview, { isLoading: isLoadingReview, isError, error }] =
     useCreateReviewMutation();
-  const { register: registerInput, handleSubmit, reset } = useForm<FormState>();
+  const { register: registerInput, handleSubmit, reset, setValue, watch } = useForm<FormState>();
+
+  const stars = watch('stars');
 
   const handleCreateReview: SubmitHandler<FormState> = async (
     data,
@@ -54,6 +58,11 @@ export const Product = ({ match: { params } }: ProductProps) => {
       // TODO
       console.log(error);
     }
+  };
+
+  const onChange = (value: any) => {
+    console.log(value);
+    setValue('stars', value);
   };
 
   const handleAddToCart = () => {
@@ -82,7 +91,7 @@ export const Product = ({ match: { params } }: ProductProps) => {
         <Col xs={12} xl={6}>
           <Image
             src={
-              "https://media.merlin.pl/media/original/000/003/798/56ba60fda1bce.jpg"
+              product.pictureUrl
             }
             fluid
           />
@@ -92,9 +101,15 @@ export const Product = ({ match: { params } }: ProductProps) => {
             <Stack className="mb-3">
               <h1>{product.name}</h1>
               <div className="d-flex mb-3">
-                {Array.from({ length: 5 }).map((_, index) => (Math.ceil(product.rating) > index + 1 ? <i className="bi bi-star-fill"></i> : <i className="bi bi-star"></i>))}
+                {Array.from({ length: 5 }).map((_, index) =>
+                  Math.ceil(product.rating) >= index + 1 ? (
+                    <i className="bi bi-star-fill"></i>
+                  ) : (
+                    <i className="bi bi-star"></i>
+                  )
+                )}
               </div>
-              <h2>$ {product.price}</h2>
+              <h2>{product.price} PLN</h2>
               <Button className="align-self-start" onClick={handleAddToCart}>
                 Dodaj do koszyka
               </Button>
@@ -115,11 +130,11 @@ export const Product = ({ match: { params } }: ProductProps) => {
                     <tbody>
                       <tr>
                         <td>Paczkomat</td>
-                        <td>12 $</td>
+                        <td>12 PLN</td>
                       </tr>
                       <tr>
                         <td>Kurier</td>
-                        <td>15 $</td>
+                        <td>15 PLN</td>
                       </tr>
                     </tbody>
                   </table>
@@ -129,7 +144,7 @@ export const Product = ({ match: { params } }: ProductProps) => {
                 <Accordion.Header>Recenzje</Accordion.Header>
                 <Accordion.Body>
                   <ListGroup>
-                    {product.reviews.map((review) => (
+                    {product.reviews.length > 0 ? product.reviews.map((review) => (
                       <ListGroup.Item
                         as="li"
                         key={review.id}
@@ -137,31 +152,52 @@ export const Product = ({ match: { params } }: ProductProps) => {
                       >
                         <div className="ms-2 me-auto">
                           <div className="fw-bold">{review.text}</div>
-                          {Array.from({ length: 5 }).map((_, index) => (review.stars >= index + 1 ? <i className="bi bi-star-fill"></i> : <i className="bi bi-star"></i>))}
+                          {Array.from({ length: 5 }).map((_, index) =>
+                            review.stars >= index + 1 ? (
+                              <i className="bi bi-star-fill"></i>
+                            ) : (
+                              <i className="bi bi-star"></i>
+                            )
+                          )}
                         </div>
                       </ListGroup.Item>
-                    ))}
+                    )) : (
+                      <p>Brak recenzji tego produktu, bądź pierwszy!</p>
+                    )}
                   </ListGroup>
+                  {user ? (
+                    <>
+                      <Form
+                        className="mt-5"
+                        onSubmit={handleSubmit(handleCreateReview)}
+                      >
+                        <Form.Group className="mb-3" controlId="reviewText">
+                          <Form.Label>Co myślisz o tym produkcie?</Form.Label>
+                          <Form.Control
+                            type="text"
+                            {...registerInput("text")}
+                          />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="reviewStars">
+                          <Form.Label>Twoja ocena</Form.Label>
+                          <Form.Control
+                            type="hidden"
+                            {...registerInput("stars")}
+                          />
+                          <StarPicker onChange={onChange} value={+stars ? stars : 1} />
+                        </Form.Group>
 
-                  <Form className="mt-5" onSubmit={handleSubmit(handleCreateReview)}>
-                    <Form.Group className="mb-3" controlId="reviewText">
-                      <Form.Label>Co myślisz o tym produkcie?</Form.Label>
-                      <Form.Control type="text" {...registerInput("text")} />
-                    </Form.Group>
-                    <Form.Group className="mb-3" controlId="reviewStars">
-                      <Form.Label>Ile gwiazdek? XD</Form.Label>
-                      <Form.Control type="number" {...registerInput("stars")} />
-                    </Form.Group>
-
-                    <Button
-                      variant="primary"
-                      type="submit"
-                      disabled={isLoading || isLoadingReview}
-                    >
-                      Dodaj recenzję
-                    </Button>
-                  </Form>
-                  {isError ? JSON.stringify(error) : null}
+                        <Button
+                          variant="primary"
+                          type="submit"
+                          disabled={isLoading || isLoadingReview}
+                        >
+                          Dodaj recenzję
+                        </Button>
+                      </Form>
+                      {isError ? JSON.stringify(error) : null}
+                    </>
+                  ) : null}
                 </Accordion.Body>
               </Accordion.Item>
             </Accordion>

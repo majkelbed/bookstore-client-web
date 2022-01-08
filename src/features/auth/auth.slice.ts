@@ -46,10 +46,10 @@ export const authSlice = createSlice({
     },
     setCredentials: (
       state,
-      { payload }: PayloadAction<Pick<AuthState, "token" | "user">>
+      { payload }: PayloadAction<Partial<Pick<AuthState, "token" | "user">>>
     ) => {
-      state.token = payload.token;
-      state.user = payload.user;
+      if(payload.token !== undefined) state.token = payload.token;
+      if(payload.user !== undefined) state.user = payload.user;
       state.isAuthModalOpen = false;
     },
   },

@@ -4,7 +4,7 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  images: string[];
+  pictureUrl: string;
   price: number;
   rating: number;
   reviews: {
@@ -35,7 +35,7 @@ export const productsApi = createApi({
         return ({
           url: '/review',
           method: 'POST',
-          body
+          body,
         })
       },
       invalidatesTags: () => ['single-product']

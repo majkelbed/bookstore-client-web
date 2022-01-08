@@ -32,7 +32,7 @@ export const ProductsGrid = () => {
               >
                 <Card.Img
                   variant="top"
-                  src={"https://media.merlin.pl/media/original/000/003/798/56ba60fda1bce.jpg"}
+                  src={product.pictureUrl}
                   alt={product.name}
                 />
               </Link>
@@ -52,7 +52,7 @@ export const ProductsGrid = () => {
                 </Card.Text>
 
                 <div className="d-flex align-items-center justify-content-between mt-auto">
-                  <p className="m-0 text-primary fw-bold">$ {product.price}</p>
+                  <p className="m-0 text-primary fw-bold">{product.price} PLN</p>
                   <Button
                     className="rounded rounded-pill p-0"
                     style={{ width: "48px", height: "48px" }}

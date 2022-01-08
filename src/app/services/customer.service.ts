@@ -20,7 +20,17 @@ export const customerApi = createApi({
         body: data
       })
     }),
+    update: builder.mutation<any, { data: any }>({
+      query: ({ data }) => ({
+        method: 'PATCH',
+        url: ``,
+        body: data,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        }
+      })
+    }),
   }),
 })
 
-export const { useLoginMutation, useRegisterMutation } = customerApi
+export const { useLoginMutation, useRegisterMutation, useUpdateMutation } = customerApi

@@ -3,12 +3,14 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { authReducer } from "../features/auth/auth.slice";
 import { cartReducer } from "../features/cart/cart.slice";
 import { customerApi } from "./services/customer.service";
+import { ordersApi } from "./services/order.service";
 import { productsApi } from "./services/products.service";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     cart: cartReducer,
+    [ordersApi.reducerPath]: ordersApi.reducer,
     [customerApi.reducerPath]: customerApi.reducer,
     [productsApi.reducerPath]: productsApi.reducer,
   },
